@@ -1390,13 +1390,15 @@ function(_juce_set_plugin_target_properties shared_code_target kind)
             VERBATIM)
 
         # generate .ttl files
-        add_executable(${target_name}_lv2_ttl_generator ${JUCE_CMAKE_UTILS_DIR}/lv2_ttl_generator.c)
-        target_link_libraries(${target_name}_lv2_ttl_generator dl)
-        add_custom_command(TARGET ${target_name} POST_BUILD
-            COMMAND ${CROSSCOMPILING_EMULATOR} "${CMAKE_CURRENT_BINARY_DIR}/${target_name}_lv2_ttl_generator" "./${lv2_shared_lib}.so"
-            DEPENDS ${target_name} ${target_name}_lv2_ttl_generator
-            WORKING_DIRECTORY "${products_folder}/${product_name}.lv2"
-            VERBATIM)
+        if(NOT SKIP_LV2_TTL_GENERATOR)
+            add_executable(${target_name}_lv2_ttl_generator ${JUCE_CMAKE_UTILS_DIR}/lv2_ttl_generator.c)
+            target_link_libraries(${target_name}_lv2_ttl_generator dl)
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND ${CROSSCOMPILING_EMULATOR} "${CMAKE_CURRENT_BINARY_DIR}/${target_name}_lv2_ttl_generator" "./${lv2_shared_lib}.so"
+                DEPENDS ${target_name} ${target_name}_lv2_ttl_generator
+                WORKING_DIRECTORY "${products_folder}/${product_name}.lv2"
+                VERBATIM)
+        endif()
 
         _juce_copy_after_build(${shared_code_target} ${target_name} "${output_path}" JUCE_LV2_COPY_DIR)
     elseif(kind STREQUAL "AU")
