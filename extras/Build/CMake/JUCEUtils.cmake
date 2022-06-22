@@ -1346,6 +1346,7 @@ function(_juce_set_plugin_target_properties shared_code_target kind)
         set_target_properties(${target_name} PROPERTIES
             BUNDLE_EXTENSION vst
             BUNDLE TRUE
+            PREFIX ""
             XCODE_ATTRIBUTE_WRAPPER_EXTENSION vst
             XCODE_ATTRIBUTE_LIBRARY_STYLE Bundle
             XCODE_ATTRIBUTE_GENERATE_PKGINFO_FILE YES)
@@ -1598,9 +1599,7 @@ function(_juce_configure_plugin_targets target)
         endif()
     endforeach()
 
-    if((VST IN_LIST active_formats) AND (NOT TARGET juce_vst2_sdk))
-        message(FATAL_ERROR "Use juce_set_vst2_sdk_path to set up the VST sdk before adding VST targets")
-    elseif((AAX IN_LIST active_formats) AND (NOT TARGET juce_aax_sdk))
+    if((AAX IN_LIST active_formats) AND (NOT TARGET juce_aax_sdk))
         message(FATAL_ERROR "Use juce_set_aax_sdk_path to set up the AAX sdk before adding AAX targets")
     endif()
 
@@ -2079,7 +2078,6 @@ function(_juce_initialise_target target)
 
     target_include_directories(${target} PRIVATE
         $<TARGET_PROPERTY:${target},JUCE_GENERATED_SOURCES_DIRECTORY>)
-    target_link_libraries(${target} PUBLIC $<$<TARGET_EXISTS:juce_vst2_sdk>:juce_vst2_sdk>)
 
     get_target_property(is_pluginhost_au ${target} JUCE_PLUGINHOST_AU)
 
@@ -2235,23 +2233,17 @@ function(juce_add_pip header)
     if(pip_kind STREQUAL "AudioProcessor")
         set(source_main "${JUCE_CMAKE_UTILS_DIR}/PIPAudioProcessor.cpp.in")
 
-        # We add AAX/VST2 targets too, if the user has set up those SDKs
-
-        set(extra_formats)
+        # We add AAX target too, if the user has set up that SDK
 
         if(TARGET juce_aax_sdk)
             list(APPEND extra_formats AAX)
-        endif()
-
-        if(TARGET juce_vst2_sdk)
-            list(APPEND extra_formats VST)
         endif()
 
         # Standalone plugins might want to access the mic
         list(APPEND extra_target_args MICROPHONE_PERMISSION_ENABLED TRUE)
 
         juce_add_plugin(${JUCE_PIP_NAME}
-            FORMATS AU AUv3 VST3 Unity Standalone ${extra_formats}
+            FORMATS AU AUv3 VST VST3 Unity Standalone ${extra_formats}
             ${extra_target_args})
     elseif(pip_kind STREQUAL "Component")
         set(source_main "${JUCE_CMAKE_UTILS_DIR}/PIPComponent.cpp.in")
@@ -2366,25 +2358,6 @@ function(juce_set_aax_sdk_path path)
         "${path}/Interfaces/ACF")
     target_compile_definitions(juce_aax_sdk INTERFACE JucePlugin_AAXLibs_path="${path}/Libs")
     set_target_properties(juce_aax_sdk PROPERTIES INTERFACE_JUCE_AAX_DEFAULT_ICON "${path}/Utilities/PlugIn.ico")
-endfunction()
-
-function(juce_set_vst2_sdk_path path)
-    if(TARGET juce_vst2_sdk)
-        message(FATAL_ERROR "juce_set_vst2_sdk_path should only be called once")
-    endif()
-
-    _juce_make_absolute(path)
-
-    if(NOT EXISTS "${path}")
-        message(FATAL_ERROR "Could not find VST2 SDK at the specified path: ${path}")
-    endif()
-
-    add_library(juce_vst2_sdk INTERFACE IMPORTED GLOBAL)
-
-    # This is a bit of a hack, but we really need the VST2 paths to always follow the VST3 paths.
-    target_include_directories(juce_vst2_sdk INTERFACE
-        $<TARGET_PROPERTY:juce::juce_vst3_headers,INTERFACE_INCLUDE_DIRECTORIES>
-        "${path}")
 endfunction()
 
 # ==================================================================================================
