@@ -1023,9 +1023,17 @@ function(_juce_set_plugin_target_properties shared_code_target kind)
         set(output_path "${products_folder}/${product_name}.lv2")
         set_target_properties(${target_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${output_path}")
 
-        add_custom_command(TARGET ${target_name} POST_BUILD
-            COMMAND juce::juce_lv2_helper "$<TARGET_FILE:${target_name}>"
-            VERBATIM)
+        if(CMAKE_JUCE_HELPER_ARM)
+            message(STATUS "Using ARM juce helper")
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND qemu-aarch64 -L /usr/aarch64-linux-gnu jucebuild/modules/juce_audio_plugin_client/juce_lv2_helper "$<TARGET_FILE:${target_name}>"
+                VERBATIM)
+        else()
+            message(STATUS "Using native juce helper")
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND juce::juce_lv2_helper "$<TARGET_FILE:${target_name}>"
+                VERBATIM)
+        endif()
 
         _juce_set_copy_properties(${shared_code_target} ${target_name} "${output_path}" JUCE_LV2_COPY_DIR)
     endif()
