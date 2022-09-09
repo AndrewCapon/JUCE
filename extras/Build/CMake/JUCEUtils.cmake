@@ -1023,7 +1023,7 @@ function(_juce_set_plugin_target_properties shared_code_target kind)
         set(output_path "${products_folder}/${product_name}.lv2")
         set_target_properties(${target_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${output_path}")
 
-        if(CMAKE_JUCE_HELPER_ARM)
+        if(CMAKE_MOD_DEVICES)
             message(STATUS "Using ARM juce helper")
             add_custom_command(TARGET ${target_name} POST_BUILD
                 COMMAND qemu-aarch64 -L /usr/aarch64-linux-gnu jucebuild/modules/juce_audio_plugin_client/juce_lv2_helper "$<TARGET_FILE:${target_name}>"

@@ -26,7 +26,9 @@
 # simulator if we're targeting iOS or Android, we reinvoke cmake here and build juceaide during the
 # configuration stage of the outer project.
 
-if(JUCE_BUILD_HELPER_TOOLS)
+if(CMAKE_MOD_DEVICES)
+    message(STATUS "Not building juceaide")
+elseif(JUCE_BUILD_HELPER_TOOLS)
     # Build the tool for the current system
     juce_add_console_app(juceaide)
 
@@ -70,7 +72,7 @@ else()
     message(STATUS "Configuring juceaide")
 
     # Looks like we're bootstrapping, reinvoke CMake
-    execute_process(COMMAND "${CMAKE_COMMAND}"
+    execute_process(COMMAND "bash ${CMAKE_COMMAND}"
             "."
             "-B${JUCE_BINARY_DIR}/tools"
             "-G${CMAKE_GENERATOR}"
@@ -90,7 +92,7 @@ else()
 
     message(STATUS "Building juceaide")
 
-    execute_process(COMMAND "${CMAKE_COMMAND}"
+    execute_process(COMMAND "bash ${CMAKE_COMMAND}"
             --build "${JUCE_BINARY_DIR}/tools"
             --config Debug
         OUTPUT_VARIABLE command_output
