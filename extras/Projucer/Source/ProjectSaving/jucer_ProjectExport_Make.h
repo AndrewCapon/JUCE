@@ -1118,41 +1118,12 @@ public:
         return linuxPackages;
     }
 
-    void create (const OwnedArray<LibraryModule>&lm) const override
-    {
-        ValueTreePropertyWithDefault juceUseCurl = project.getConfigFlag ("JUCE_USE_CURL");
-        ValueTreePropertyWithDefault juceWebBrowser = project.getConfigFlag ("JUCE_WEB_BROWSER");
-
-        // save curl and web browser settings
-        bool curlEnabled = juceUseCurl.get();
-        bool curlDefault = juceUseCurl.isUsingDefault();
-
-        bool webBrowserEnabled = juceWebBrowser.get();
-        bool webBrowserDefault = juceWebBrowser.isUsingDefault();
-        
-        // set curl and web browser to false for this export
-        juceUseCurl.setValue(false, nullptr);
-        juceWebBrowser.setValue(false, nullptr);
-
-        // export Makefile
-        MakefileProjectExporter::create(lm);
-
-        // restore curl and web browser settings
-        if(curlDefault)
-            juceUseCurl.resetToDefault();
-        else
-            juceUseCurl.setValue(curlEnabled, nullptr);
-
-        if(webBrowserDefault)
-            juceWebBrowser.resetToDefault();
-        else
-            juceWebBrowser.setValue(webBrowserEnabled, nullptr);
-    }
-
     StringPairArray getDefines (const BuildConfiguration& config) const override
     {
         StringPairArray result = MakefileProjectExporter::getDefines(config);
         result.set("JUCE_AUDIOPROCESSOR_NO_GUI", "1");
+        result.set("JUCE_USE_CURL", "0");
+        result.set("JUCE_WEB_BROWSER", "0");
         return result;
     }
 
