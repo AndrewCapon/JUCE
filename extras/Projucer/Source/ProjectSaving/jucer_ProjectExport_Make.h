@@ -402,7 +402,7 @@ public:
             }
             else if (type == LV2PlugIn)
             {
-                out << "\t$(V_AT) $(JUCE_OUTDIR)/$(JUCE_TARGET_LV2_MANIFEST_HELPER) "
+                out << "\t$(V_AT) " + owner.lv2ManifestHelperPrefix + " $(JUCE_OUTDIR)/$(JUCE_TARGET_LV2_MANIFEST_HELPER) "
                        "$(abspath $(JUCE_LV2_FULL_PATH))"                                              << newLine
                     << "\t-$(V_AT)mkdir -p $(JUCE_LV2DESTDIR)"                                         << newLine
                     << "\t-$(V_AT)cp -R $(JUCE_COPYCMD_LV2_PLUGIN)"                                    << newLine;
@@ -418,6 +418,7 @@ public:
     static String getDisplayName()        { return "Linux Makefile"; }
     static String getValueTreeTypeName()  { return "LINUX_MAKE"; }
     static String getTargetFolderName()   { return "LinuxMakefile"; }
+    static String getLV2Helper()          { return "$(JUCE_OUTDIR)/$(JUCE_TARGET_LV2_MANIFEST_HELPER)"; }
 
     Identifier getExporterIdentifier() const override { return getValueTreeTypeName(); }
 
@@ -548,11 +549,10 @@ public:
         jassert (targets.size() > 0);
     }
 
-private:
-    ValueTreePropertyWithDefault extraPkgConfigValue;
+    String lv2ManifestHelperPrefix;
 
-    //==============================================================================
-    StringPairArray getDefines (const BuildConfiguration& config) const
+protected:
+    virtual StringPairArray getDefines (const BuildConfiguration& config) const
     {
         StringPairArray result;
 
@@ -573,6 +573,10 @@ private:
         return result;
     }
 
+private:
+    ValueTreePropertyWithDefault extraPkgConfigValue;
+
+    //==============================================================================
     StringArray getExtraPkgConfigPackages() const
     {
         auto packages = StringArray::fromTokens (extraPkgConfigValue.get().toString(), " ", "\"'");
@@ -1083,4 +1087,73 @@ private:
     OwnedArray<MakefileTarget> targets;
 
     JUCE_DECLARE_NON_COPYABLE (MakefileProjectExporter)
+};
+
+
+class ModMakefileProjectExporter  : public MakefileProjectExporter
+{
+public:
+    static String getDisplayName()        { return "Mod Linux Makefile"; }
+    static String getValueTreeTypeName()  { return "MOD_LINUX_MAKE"; }
+    static String getTargetFolderName()   { return "ModLinuxMakefile"; }
+
+    static ModMakefileProjectExporter* createForSettings (Project& projectToUse, const ValueTree& settingsToUse)
+    {
+        if (settingsToUse.hasType (getValueTreeTypeName()))
+            return new ModMakefileProjectExporter (projectToUse, settingsToUse);
+
+        return nullptr;
+    }
+
+    ModMakefileProjectExporter (Project& p, const ValueTree& t)
+        : MakefileProjectExporter (p, t)
+    {
+        name = getDisplayName();
+        lv2ManifestHelperPrefix = "qemu-aarch64 -L /usr/aarch64-linux-gnu ";
+        targetLocationValue.setDefault (getDefaultBuildsRootFolder() + getTargetFolderName());
+    }
+
+    StringArray getLinuxPackages (PackageDependencyType type) const override
+    {
+        return linuxPackages;
+    }
+
+    void create (const OwnedArray<LibraryModule>&lm) const override
+    {
+        ValueTreePropertyWithDefault juceUseCurl = project.getConfigFlag ("JUCE_USE_CURL");
+        ValueTreePropertyWithDefault juceWebBrowser = project.getConfigFlag ("JUCE_WEB_BROWSER");
+
+        // save curl and web browser settings
+        bool curlEnabled = juceUseCurl.get();
+        bool curlDefault = juceUseCurl.isUsingDefault();
+
+        bool webBrowserEnabled = juceWebBrowser.get();
+        bool webBrowserDefault = juceWebBrowser.isUsingDefault();
+        
+        // set curl and web browser to false for this export
+        juceUseCurl.setValue(false, nullptr);
+        juceWebBrowser.setValue(false, nullptr);
+
+        // export Makefile
+        MakefileProjectExporter::create(lm);
+
+        // restore curl and web browser settings
+        if(curlDefault)
+            juceUseCurl.resetToDefault();
+        else
+            juceUseCurl.setValue(curlEnabled, nullptr);
+
+        if(webBrowserDefault)
+            juceWebBrowser.resetToDefault();
+        else
+            juceWebBrowser.setValue(webBrowserEnabled, nullptr);
+    }
+
+    StringPairArray getDefines (const BuildConfiguration& config) const override
+    {
+        StringPairArray result = MakefileProjectExporter::getDefines(config);
+        result.set("JUCE_AUDIOPROCESSOR_NO_GUI", "1");
+        return result;
+    }
+
 };

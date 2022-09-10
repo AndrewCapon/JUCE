@@ -76,6 +76,7 @@ std::vector<ProjectExporter::ExporterTypeInfo> ProjectExporter::getExporterTypeI
         createExporterTypeInfo<MSVCProjectExporterVC2017> (export_visualStudio_svg, export_visualStudio_svgSize),
 
         createExporterTypeInfo<MakefileProjectExporter> (export_linux_svg, export_linux_svgSize),
+        createExporterTypeInfo<ModMakefileProjectExporter> (export_linux_svg, export_linux_svgSize),
 
         createExporterTypeInfo<AndroidProjectExporter> (export_android_svg, export_android_svgSize),
 
@@ -155,6 +156,7 @@ std::unique_ptr<ProjectExporter> ProjectExporter::createExporterFromSettings (Pr
                                 Tag<MSVCProjectExporterVC2019>{},
                                 Tag<MSVCProjectExporterVC2017>{},
                                 Tag<MakefileProjectExporter>{},
+                                Tag<ModMakefileProjectExporter>{},
                                 Tag<AndroidProjectExporter>{},
                                 Tag<CodeBlocksProjectExporter>{});
 }

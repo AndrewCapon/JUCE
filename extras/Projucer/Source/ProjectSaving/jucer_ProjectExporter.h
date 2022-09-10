@@ -209,7 +209,7 @@ public:
         link
     };
 
-    StringArray getLinuxPackages (PackageDependencyType type) const;
+    virtual StringArray getLinuxPackages (PackageDependencyType type) const;
 
     //==============================================================================
     StringPairArray msvcExtraPreprocessorDefs;
