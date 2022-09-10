@@ -72,7 +72,7 @@ else()
     message(STATUS "Configuring juceaide")
 
     # Looks like we're bootstrapping, reinvoke CMake
-    execute_process(COMMAND "bash ${CMAKE_COMMAND}"
+    execute_process(COMMAND "${CMAKE_COMMAND}"
             "."
             "-B${JUCE_BINARY_DIR}/tools"
             "-G${CMAKE_GENERATOR}"
@@ -92,7 +92,7 @@ else()
 
     message(STATUS "Building juceaide")
 
-    execute_process(COMMAND "bash ${CMAKE_COMMAND}"
+    execute_process(COMMAND "${CMAKE_COMMAND}"
             --build "${JUCE_BINARY_DIR}/tools"
             --config Debug
         OUTPUT_VARIABLE command_output
